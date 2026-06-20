@@ -76,6 +76,7 @@ export const EVENT_KINDS = [
   "migration",
   "mutate",
   "wildcard",
+  "reset",
 ] as const;
 export type EventKind = (typeof EVENT_KINDS)[number];
 
@@ -93,7 +94,16 @@ export interface FossilEvent {
   text?: string;
 }
 
-export type MasterMessage = MasterHello | LiveVitals | VitalsSnap | FossilEvent;
+// Lightweight narrator / birth / death / system ticker line (NOT archived). The
+// master sends these best-effort so the dashboard feed feels alive between the
+// rarer durable fossil events.
+export interface MasterLog {
+  t: "log";
+  type: string; // "birth" | "death" | "system" | "narrator" | ...
+  text: string;
+}
+
+export type MasterMessage = MasterHello | LiveVitals | VitalsSnap | FossilEvent | MasterLog;
 
 // ---------------------------------------------------------------------------
 // Selis -> Master (text JSON)
@@ -111,7 +121,15 @@ export interface SelisAck {
   vit: number;
 }
 
-export type SelisMessage = SelisHello | SelisAck;
+// Operator command forwarded to the master (e.g. full environment reset). The
+// master only acts on commands it recognizes; unknown ones are ignored.
+export interface SelisCommand {
+  t: "cmd";
+  name: string;
+  args: Record<string, unknown>;
+}
+
+export type SelisMessage = SelisHello | SelisAck | SelisCommand;
 
 // ---------------------------------------------------------------------------
 // Selis -> Browser (hub). Field frames forwarded as raw binary; rest is JSON.
@@ -136,7 +154,14 @@ export interface HubCluster {
   online: boolean;
 }
 
-export type HubMessage = HubSnapshot | LiveVitals | FossilEvent | HubCluster;
+// Live ticker line forwarded from the master (narrator / birth / death / system).
+export interface HubLog {
+  t: "log";
+  type: string;
+  text: string;
+}
+
+export type HubMessage = HubSnapshot | LiveVitals | FossilEvent | HubCluster | HubLog;
 
 // ---------------------------------------------------------------------------
 // Binary field frame helpers: [0xCA][w][h][nch][w*h*nch bytes], channel-major.

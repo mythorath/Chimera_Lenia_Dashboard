@@ -27,6 +27,18 @@ export class EventLog {
     while (this.el.childNodes.length > this.max) this.el.lastChild?.remove();
   }
 
+  // Ephemeral ticker line (narrator / system / birth / death text from the
+  // master's live "log" feed). Lighter weight than a durable fossil row.
+  addLog(type: string, text: string): void {
+    const d = document.createElement("div");
+    d.className = `ev ev-log ev-${type}`;
+    d.innerHTML = `<span class="k">[live]</span> <span class="${KIND_CLASS[type] ?? ""}">${escapeHtml(
+      type,
+    )}</span> ${escapeHtml(text)}`;
+    this.el.prepend(d);
+    while (this.el.childNodes.length > this.max) this.el.lastChild?.remove();
+  }
+
   private row(e: FossilEvent): HTMLElement {
     const d = document.createElement("div");
     d.className = `ev ev-${e.kind}`;

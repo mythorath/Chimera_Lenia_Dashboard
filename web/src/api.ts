@@ -43,3 +43,13 @@ export async function getJSON<T>(path: string): Promise<T> {
   if (!r.ok) throw new Error(`${path}: ${r.status}`);
   return (await r.json()) as T;
 }
+
+export async function postJSON<T>(path: string, body: unknown): Promise<T> {
+  const r = await fetch(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) throw new Error(`${path}: ${r.status}`);
+  return (await r.json()) as T;
+}

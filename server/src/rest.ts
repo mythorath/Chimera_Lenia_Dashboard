@@ -1,6 +1,6 @@
 // rest.ts - history endpoints over the SQLite archive, for the dashboard's
 // charts, fossil-record view, field guide, and (later) the history scrubber.
-import { Router } from "express";
+import { Router, json } from "express";
 import { readdirSync, statSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import type { Store } from "./store";
@@ -11,12 +11,32 @@ function intParam(v: unknown, def: number): number {
   return Number.isFinite(n) ? n : def;
 }
 
-export function makeRestRouter(store: Store): Router {
+// Commands the dashboard is allowed to forward to the master. Whitelisted so a
+// generic POST can't push arbitrary opcodes onto the cluster.
+const ALLOWED_COMMANDS = new Set(["reset_environment"]);
+
+type CommandSender = (name: string, args: Record<string, unknown>) => boolean;
+
+export function makeRestRouter(store: Store, sendCommand: CommandSender): Router {
   const r = Router();
   const DAY = 86_400_000;
 
   r.get("/health", (_req, res) => {
     res.json({ ok: true, acks: store.acks() });
+  });
+
+  // Operator command -> master (e.g. full environment reset). Best-effort: if no
+  // master is connected, the cluster keeps running autonomously.
+  r.post("/command", json(), (req, res) => {
+    const body = (req.body ?? {}) as { name?: unknown; args?: unknown };
+    const name = typeof body.name === "string" ? body.name : "";
+    const args =
+      body.args && typeof body.args === "object" ? (body.args as Record<string, unknown>) : {};
+    if (!ALLOWED_COMMANDS.has(name)) {
+      return res.status(400).json({ ok: false, error: "unknown command" });
+    }
+    const delivered = sendCommand(name, args);
+    res.json({ ok: true, delivered });
   });
 
   r.get("/vitals", (req, res) => {

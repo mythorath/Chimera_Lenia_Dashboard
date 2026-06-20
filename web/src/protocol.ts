@@ -29,7 +29,7 @@ export interface LiveVitals {
   strips?: StripFitness[];
 }
 
-export type EventKind = "birth" | "death" | "colonize" | "migration" | "mutate" | "wildcard";
+export type EventKind = "birth" | "death" | "colonize" | "migration" | "mutate" | "wildcard" | "reset";
 
 export interface FossilEvent {
   t: "event";
@@ -57,4 +57,12 @@ export interface HubCluster {
   online: boolean;
 }
 
-export type HubMessage = HubSnapshot | LiveVitals | FossilEvent | HubCluster;
+// Lightweight live ticker line (narrator / birth / death / system) forwarded
+// from the master. Not part of the durable fossil record.
+export interface HubLog {
+  t: "log";
+  type: string;
+  text: string;
+}
+
+export type HubMessage = HubSnapshot | LiveVitals | FossilEvent | HubCluster | HubLog;

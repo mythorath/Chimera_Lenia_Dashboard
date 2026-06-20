@@ -14,7 +14,9 @@ function main(): void {
   log.info("archive:", config.dbPath, "acks:", store.acks());
 
   const hub = new Hub(config, store);
-  new Ingest(config, store, hub);
+  const ingest = new Ingest(config, store, hub);
+  // Let the browser hub forward operator commands (e.g. reset) to the master.
+  hub.setCommandSender((name, args) => ingest.sendCommand(name, args));
 
   log.info("ready. waiting for master to dial in...");
 }

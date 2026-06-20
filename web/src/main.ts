@@ -9,7 +9,7 @@ import { EventLog } from "./events";
 import { Cinema } from "./cinema";
 import { aboutHtml } from "./about";
 import { legendHtml } from "./legend";
-import { connectHub, getJSON } from "./api";
+import { connectHub, getJSON, postJSON } from "./api";
 import { StageViewport } from "./viewport";
 import type { HubMessage, FossilEvent } from "./protocol";
 
@@ -84,6 +84,21 @@ legend.addEventListener("click", (e) => {
   const t = e.target as HTMLElement;
   if (t === legend || t.classList.contains("legend-close")) showLegend(false);
 });
+// ---- Reset world: reseed the whole cluster from scratch (operator command) ----
+const resetBtn = $<HTMLButtonElement>("resetBtn");
+resetBtn.addEventListener("click", () => {
+  if (!confirm("Reset the entire world? Every strip will be reseeded from scratch.")) return;
+  const pattern = confirm("OK = random NOISE soup    Cancel = Orbium gliders") ? "noise" : "orbium";
+  void postJSON<{ ok: boolean; delivered: boolean }>("/api/command", {
+    name: "reset_environment",
+    args: { pattern, clear_history: false },
+  })
+    .then((res) => {
+      if (!res.delivered) alert("Reset sent, but no master is connected right now.");
+    })
+    .catch(() => alert("Reset failed: could not reach the Selis server."));
+});
+
 $("aboutBtn").addEventListener("click", () => showAbout(true));
 about.addEventListener("click", (e) => {
   const t = e.target as HTMLElement;
@@ -121,6 +136,9 @@ function handleMessage(msg: HubMessage): void {
       break;
     case "cluster":
       setBadge(clusterBadge, msg.online, `cluster: ${msg.online ? "online" : "offline"}`);
+      break;
+    case "log":
+      log.addLog(msg.type, msg.text);
       break;
     default: {
       const _exhaustive: never = msg;

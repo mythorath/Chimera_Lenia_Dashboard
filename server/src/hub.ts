@@ -8,10 +8,12 @@ import { WebSocketServer, WebSocket } from "ws";
 import type { Config } from "./config";
 import type { Store } from "./store";
 import { makeRestRouter } from "./rest";
-import type { FossilEvent, HubSnapshot, LiveVitals, StripFitness } from "./protocol";
+import type { FossilEvent, HubSnapshot, LiveVitals, MasterLog, StripFitness } from "./protocol";
 import { logger } from "./log";
 
 const log = logger("hub");
+
+export type CommandSender = (name: string, args: Record<string, unknown>) => boolean;
 
 export class Hub {
   private wss: WebSocketServer;
@@ -23,6 +25,8 @@ export class Hub {
   private lastField: Buffer | null = null;
   private strips: StripFitness[];
   private clusterOnline = false;
+  // Set after construction (Ingest is created last); forwards operator commands.
+  private commandSender: CommandSender | null = null;
 
   constructor(
     cfg: Config,
@@ -31,7 +35,9 @@ export class Hub {
     this.strips = store.emptyStripFitness();
 
     const app = express();
-    app.use("/api", makeRestRouter(store));
+    app.use("/api", makeRestRouter(store, (name, args) =>
+      this.commandSender ? this.commandSender(name, args) : false,
+    ));
 
     // HLS "cinema" stream from the GPU dream renderer (NVENC). The playlist must
     // never be cached so the browser keeps pulling fresh live segments.
@@ -108,10 +114,18 @@ export class Hub {
     this.broadcastText(e);
   }
 
+  broadcastLog(l: MasterLog): void {
+    this.broadcastText({ t: "log", type: l.type, text: l.text });
+  }
+
   setClusterOnline(online: boolean): void {
     if (online === this.clusterOnline) return;
     this.clusterOnline = online;
     log.info("cluster link:", online ? "ONLINE" : "offline");
     this.broadcastText({ t: "cluster", online });
+  }
+
+  setCommandSender(fn: CommandSender): void {
+    this.commandSender = fn;
   }
 }

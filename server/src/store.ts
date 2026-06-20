@@ -128,6 +128,18 @@ export class Store {
     if (seq > have) this.setAck.run({ stream, acked: seq });
   }
 
+  // The master's durable spool was reset (e.g. a full environment reset with
+  // clear-history, or a flash that wiped LittleFS): its seq counters restarted
+  // below what we've archived. Our old archive belongs to a dead epoch and its
+  // seqs now collide with the master's fresh ones (INSERT OR IGNORE would drop
+  // every new event). Rebase: wipe the archive and re-anchor acks to what the
+  // master currently holds so new low-seq events flow in cleanly.
+  resetArchive(ev: number, vit: number): void {
+    this.db.exec(`DELETE FROM events; DELETE FROM vitals; DELETE FROM organisms;`);
+    this.setAck.run({ stream: "ev", acked: ev });
+    this.setAck.run({ stream: "vit", acked: vit });
+  }
+
   acks(): Acks {
     const rows = this.db.prepare(`SELECT stream, acked FROM ack_state`).all() as {
       stream: string;
