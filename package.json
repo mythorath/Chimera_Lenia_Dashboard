@@ -1,0 +1,25 @@
+{
+  "name": "chimera-lenia-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Selis-side ingest server, archive, and dashboard for the Chimera Lenia distributed cluster.",
+  "workspaces": [
+    "server",
+    "web"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,web -c green,cyan \"npm:dev:server\" \"npm:dev:web\"",
+    "dev:server": "npm -w server run dev",
+    "dev:web": "npm -w web run dev",
+    "mock": "npm -w server run mock",
+    "build": "npm -w web run build",
+    "start": "npm -w server run start",
+    "typecheck": "npm -w server run typecheck && npm -w web run typecheck"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

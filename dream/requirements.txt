@@ -1,0 +1,5 @@
+# GPU dream renderer deps. torch is installed from the CUDA 12.4 index (see _setup.sh):
+#   pip install torch --index-url https://download.pytorch.org/whl/cu124
+torch
+numpy
+websockets

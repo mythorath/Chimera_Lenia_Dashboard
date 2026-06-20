@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Chimera Lenia</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div class="ambient"></div>
+    <header>
+      <div class="brand">
+        <h1>CHIMERA<span>LENIA</span></h1>
+        <span class="sub">two hemispheres, one mind</span>
+      </div>
+      <div class="links">
+        <div class="toggle" id="viewToggle">
+          <button data-view="live" class="active">LIVE</button>
+          <button data-view="cinema">CINEMA</button>
+        </div>
+        <button id="aboutBtn" class="about-btn" title="What is this?">ABOUT</button>
+        <span id="cluster" class="badge no"><i></i>cluster</span>
+        <span id="conn" class="badge no"><i></i>server</span>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <section class="stage">
+        <div class="stage-frame" id="stageFrame">
+          <div class="stage-rotate" id="stageRotate">
+            <div class="stage-viewport" id="stageViewport">
+              <canvas id="field"></canvas>
+              <video id="cinema" muted playsinline hidden></video>
+            </div>
+          </div>
+          <button type="button" id="legendBtn" class="stage-legend" title="Field visual guide">
+            field guide
+          </button>
+          <button type="button" id="stageReset" class="stage-reset" title="Reset map view" hidden>
+            reset view
+          </button>
+          <div id="cinemaNote" class="cinema-note" hidden></div>
+          <div class="stage-edge"></div>
+          <div class="bank-label a">BANK A &middot; instinct</div>
+          <div class="bank-label b">BANK B &middot; memory</div>
+        </div>
+      </section>
+
+      <section class="side">
+        <div class="card">
+          <h2>World vitals</h2>
+          <div id="vitals" class="stats"></div>
+        </div>
+        <div class="card">
+          <h2>Fitness landscape</h2>
+          <div id="bars" class="bars"></div>
+        </div>
+        <div class="card grow">
+          <h2>Fossil record</h2>
+          <div id="log"></div>
+        </div>
+      </section>
+    </main>
+
+    <div id="legend" class="legend" hidden>
+      <div class="legend-panel">
+        <button class="legend-close" title="Close (Esc)">&times;</button>
+        <div class="legend-body"></div>
+      </div>
+    </div>
+
+    <div id="about" class="about" hidden>
+      <div class="about-panel">
+        <button class="about-close" title="Close (Esc)">&times;</button>
+        <div class="about-body"></div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
